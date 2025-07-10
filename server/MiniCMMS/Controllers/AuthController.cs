@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
     }
 
 
-[HttpPost("register")]
+    [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] RegisterDto dto)
     {
         if (!ModelState.IsValid)
@@ -50,8 +50,8 @@ public class AuthController : ControllerBase
         }
 
         // checks to see if user already exists email
-            if (_context.Users.Any(u => u.Email == dto.Email))
-                return BadRequest("Error signing up");
+        if (_context.Users.Any(u => u.Email == dto.Email))
+            return BadRequest("Error signing up");
 
         var user = new User
         {
@@ -70,10 +70,61 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             message = "User registered successfully",
-            username = user.Username
         });
+    }
+
+    [HttpPost("login")]
+    public IActionResult Login([FromBody] LoginDto dto)
+    {
+        // first check if user is logging in with their email or generated username
+        bool isEmail = Regex.IsMatch(dto.Identifier, @"^[^@\s]+@[^@\s]+\.[^@\s]+$");
+        // Verify username
+        var user = isEmail
+            ? _context.Users.FirstOrDefault(u => u.Email == dto.Identifier)
+            : _context.Users.FirstOrDefault(u => u.Username == dto.Identifier);
+
+        if (user == null)
+        
+            return Unauthorized("Invalid credentials");
+
+        // Verify password
+        var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+
+            if (result == PasswordVerificationResult.Failed)
+            
+                return Unauthorized("Invalid credentials");
+
+
+                var claims = new[]
+                {
+            new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+            new Claim(ClaimTypes.Name, user.Username),
+            new Claim(ClaimTypes.Role, user.Role)
+        };
+
+        var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+        if (string.IsNullOrEmpty(jwtSecret))
+            throw new Exception("JWT_SECRET_KEY is not set in the environment.");
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            issuer: _config["Jwt:Issuer"],
+            audience: _config["Jwt:Audience"],
+            claims: claims,
+            expires: DateTime.Now.AddHours(1),
+            signingCredentials: creds);
+            
+        return Ok(new
+        {
+            token = new JwtSecurityTokenHandler().WriteToken(token),
+            username = user.Username,
+            role = user.Role
+        });
+        
     }
 }
 
 // public record RegisterDto(string FirstName, string LastName, string Email, string Username, string Password, string Role);
-public record LoginDto(string Username, string Password);
+public record LoginDto(string Identifier, string Password);
