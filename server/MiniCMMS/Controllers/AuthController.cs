@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using MiniCMMS.Data;
 using MiniCMMS.Models;
-using MiniCMMS.DTOs;
+using MiniCMMS.Dtos;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;

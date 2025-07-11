@@ -2,7 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using System.Globalization;
 
-namespace MiniCMMS.DTOs;
+namespace MiniCMMS.Dtos;
 
 public class RegisterDto : IValidatableObject
 {
