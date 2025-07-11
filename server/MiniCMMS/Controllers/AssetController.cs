@@ -50,4 +50,27 @@ public class AssetsController : ControllerBase
         await _context.SaveChangesAsync();
         return CreatedAtAction(nameof(GetAsset), new { id = asset.Id }, asset);
     }
+
+    [HttpPatch("{id}")]
+    public async Task<IActionResult> UpdateAsset(int id, [FromBody] AssetDto dto)
+    {
+        var asset = await _context.Assets.FindAsync(id);
+        if (asset == null)
+            return NotFound();
+
+        if (!string.IsNullOrEmpty(dto.Name))
+        asset.Name = dto.Name;
+
+        if (!string.IsNullOrEmpty(dto.Location))
+        asset.Location = dto.Location;
+
+        if (!string.IsNullOrEmpty(dto.Category))
+        asset.Category = dto.Category;
+
+        if (dto.LastMaintained != default(DateTime))
+        asset.LastMaintained = dto.LastMaintained;
+
+        await _context.SaveChangesAsync();
+        return NoContent();
+    }
 }
