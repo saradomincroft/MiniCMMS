@@ -67,10 +67,7 @@ public class AuthController : ControllerBase
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return Ok(new
-        {
-            message = "User registered successfully",
-        });
+        return Ok(new Dictionary<string, string> { { "message", "User registered successfully." } });
     }
 
     [HttpPost("login")]

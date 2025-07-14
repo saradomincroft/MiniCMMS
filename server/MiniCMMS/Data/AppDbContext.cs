@@ -9,11 +9,11 @@ public class AppDbContext : DbContext
     {
 
     }
-    public DbSet<User> Users { get; set; }
-    public DbSet<MaintenanceTask> MaintenanceTasks { get; set; }
-    public DbSet<Asset> Assets { get; set; }
-    public DbSet<TaskHistory> TaskHistories { get; set; }
-    public DbSet<TasksAssignment> TasksAssignments { get; set; }
+    public virtual DbSet<User> Users { get; set; }
+    public virtual DbSet<MaintenanceTask> MaintenanceTasks { get; set; }
+    public virtual DbSet<Asset> Assets { get; set; }
+    public virtual DbSet<TaskHistory> TaskHistories { get; set; }
+    public virtual DbSet<TasksAssignment> TasksAssignments { get; set; }
 
     // The below is an override method
     // Override's base behaviour of EF Core
