@@ -42,9 +42,10 @@ public class AssetsController : ControllerBase
         var asset = new Asset
         {
             Name = dto.Name,
-            Location = dto.Location,
+            MainLocation = dto.MainLocation,
+            SubLocation = dto.SubLocation,
             Category = dto.Category,
-            LastMaintained = dto.LastMaintained
+            LastMaintained = DateOnly.FromDateTime(dto.LastMaintained)
         };
 
         _context.Assets.Add(asset);
@@ -62,15 +63,17 @@ public class AssetsController : ControllerBase
         if (!string.IsNullOrEmpty(dto.Name))
             asset.Name = dto.Name;
 
-        if (!string.IsNullOrEmpty(dto.Location))
-            asset.Location = dto.Location;
+        if (!string.IsNullOrEmpty(dto.MainLocation))
+            asset.MainLocation = dto.MainLocation;
+
+        if (!string.IsNullOrEmpty(dto.SubLocation))
+            asset.SubLocation = dto.SubLocation;
 
         if (!string.IsNullOrEmpty(dto.Category))
-            asset.Category = dto.Category;
+                asset.Category = dto.Category;
 
         if (dto.LastMaintained != default(DateTime))
-            asset.LastMaintained = dto.LastMaintained;
-
+        asset.LastMaintained = DateOnly.FromDateTime(dto.LastMaintained.ToUniversalTime());
         await _context.SaveChangesAsync();
         return NoContent();
     }

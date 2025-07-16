@@ -1,14 +1,13 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Configuration;
-using Microsoft.IdentityModel.Tokens;
-using MiniCMMS.Data;
-using MiniCMMS.Models;
-using MiniCMMS.Dtos;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
+using MiniCMMS.Data;
+using MiniCMMS.Dtos;
+using MiniCMMS.Models;
 
 namespace MiniCMMS.Controllers;
 
@@ -133,9 +132,8 @@ public class AuthController : ControllerBase
             username = user.Username,
             role = role
         });
-        
     }
 }
 
 // public record RegisterDto(string FirstName, string LastName, string Email, string Username, string Password, string Role);
-public record LoginDto(string Identifier, string Password);
+// public record LoginDto(string Identifier, string Password);

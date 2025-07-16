@@ -1,6 +1,5 @@
 using MiniCMMS.Dtos;
 using Microsoft.AspNetCore.Mvc;
-using MiniCMMS.Controllers;
 
 public interface IAuthService
 {
