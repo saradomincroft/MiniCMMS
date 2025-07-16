@@ -10,10 +10,14 @@ public class MaintenanceTask
     public DateTime ScheduledDate { get; set; }
     public string Priority { get; set; } = "Low";
     public bool IsCompleted { get; set; } = false;
-
+    public DateTime CompletedDate { get; set; }
     public int AssetId { get; set; }
     public Asset? Asset { get; set; }
 
+    // Creator (Manager)
+    public int CreatedById { get; set; }
+    public Manager CreatedBy { get; set; } = null!;
+
+    // Assigned (Technicians)
     public ICollection<TasksAssignment> AssignedUsers { get; set; } = new List<TasksAssignment>();
-    public ICollection<TaskHistory> TaskHistories { get; set; } = new List<TaskHistory>();
 }

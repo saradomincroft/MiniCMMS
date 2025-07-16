@@ -53,13 +53,23 @@ public class AuthController : ControllerBase
         if (_context.Users.Any(u => u.Email == dto.Email))
             return BadRequest("Error signing up");
 
-        var user = new User
+        User user = dto.Role switch
         {
-            FirstName = dto.FirstName,
-            LastName = dto.LastName,
-            Email = dto.Email,
-            Username = generatedUsername,
-            Role = dto.Role,
+            "Manager" => new Manager
+            {
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                Username = generatedUsername,
+            },
+            "Technician" => new Technician
+            {
+                FirstName = dto.FirstName,
+                LastName = dto.LastName,
+                Email = dto.Email,
+                Username = generatedUsername,
+            },
+            _ => throw new ArgumentException("Invalid role.")
         };
 
         user.PasswordHash = _passwordHasher.HashPassword(user, dto.Password);
@@ -81,22 +91,26 @@ public class AuthController : ControllerBase
             : _context.Users.FirstOrDefault(u => u.Username == dto.Identifier);
 
         if (user == null)
-        
+
             return Unauthorized("Invalid credentials");
 
         // Verify password
         var result = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, dto.Password);
+        if (result == PasswordVerificationResult.Failed)
+            return Unauthorized("Invalid credentials");
 
-            if (result == PasswordVerificationResult.Failed)
-            
-                return Unauthorized("Invalid credentials");
+        string role = user switch
+        {
+            Manager => "Manager",
+            Technician => "Technician",
+            _ => "User"
+        };
 
-
-                var claims = new[]
-                {
+        var claims = new[]
+        {
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new Claim(ClaimTypes.Name, user.Username),
-            new Claim(ClaimTypes.Role, user.Role)
+            new Claim(ClaimTypes.Role, role)
         };
 
         var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
@@ -117,7 +131,7 @@ public class AuthController : ControllerBase
         {
             token = new JwtSecurityTokenHandler().WriteToken(token),
             username = user.Username,
-            role = user.Role
+            role = role
         });
         
     }

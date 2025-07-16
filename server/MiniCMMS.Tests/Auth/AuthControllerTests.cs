@@ -128,7 +128,6 @@ public class AuthControllerTests
         Assert.Equal("Technician", loginResult.role);
     }
 
-
     [Fact]
     public void Login_ReturnsUnauthorized_WithInvalidPassword()
     {
@@ -156,16 +155,4 @@ public class AuthControllerTests
         public string role { get; set; } = "";
     }
 
-
 }
-
-// public class RegisterDto
-// {
-//     public string FirstName { get; set; } = "";
-//     public string LastName { get; set; } = "";
-//     public string Email { get; set; } = "";
-//     public string Password { get; set; } = "";
-//     public string Role { get; set; } = "";
-// }
-
-// public record LoginDto(string Identifier, string Password);
