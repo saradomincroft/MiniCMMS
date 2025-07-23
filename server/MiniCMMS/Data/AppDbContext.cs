@@ -33,13 +33,13 @@ public class AppDbContext : DbContext
 
         // Set composite key (UserId + MaintenanceTaskid)
         modelBuilder.Entity<TasksAssignment>()
-            .HasKey(ta => new { ta.UserId, ta.MaintenanceTaskId });
+            .HasKey(ta => new { ta.TechnicianId, ta.MaintenanceTaskId });
 
         // Set up foreign key from TasksAssignment to User
         modelBuilder.Entity<TasksAssignment>()
-            .HasOne(ta => ta.User)
+            .HasOne(ta => ta.Technician)
             .WithMany()
-            .HasForeignKey(ta => ta.UserId);
+            .HasForeignKey(ta => ta.TechnicianId);
 
         // Set up foreign key from TasksAssignment to MaintenanceTask
         modelBuilder.Entity<TasksAssignment>()
