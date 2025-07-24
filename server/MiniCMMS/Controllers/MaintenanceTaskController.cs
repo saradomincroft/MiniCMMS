@@ -5,14 +5,17 @@ using MiniCMMS.Dtos;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace MiniCMMS.Controllers;
 
 [ApiController]
 [Route("api/[Controller]")]
+[Authorize]
 public class MaintenanceTasksController : ControllerBase
 {
     private readonly AppDbContext _context;
+    // private int currentUserId;
 
     public MaintenanceTasksController(AppDbContext context)
     {
@@ -52,34 +55,39 @@ public class MaintenanceTasksController : ControllerBase
         return Forbid("Invalid role");
     }
 
+    [Authorize(Roles = "Manager")]
     [HttpPost]
     public async Task<IActionResult> CreateTask([FromBody] CreateMaintenanceTaskDto dto)
     {
-        var manager = await _context.Users.FindAsync(dto.CreatedById);
-        if (manager is not Manager)
-            return BadRequest("Only managers can create new tasks.");
+        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == "userId");
+        if (userIdClaim == null)
+            return Unauthorized("User not authenticated.");
 
-        var task = new MaintenanceTask
+        if (!int.TryParse(userIdClaim.Value, out int currentUserId))
+            return Unauthorized("Invalid user ID.");
+
+        var maintenanceTask = new MaintenanceTask
         {
             Description = dto.Description,
             ScheduledDate = dto.ScheduledDate,
             Priority = string.IsNullOrWhiteSpace(dto.Priority) ? "Low" : dto.Priority,
             AssetId = dto.AssetId,
-            CreatedById = dto.CreatedById,
+            CreatedById = currentUserId,
             CreatedAt = DateTime.UtcNow,
             IsCompleted = false
         };
 
-        if (dto.TechnicianIds != null)
-        {
-            task.AssignedUsers = dto.TechnicianIds
-                .Select(id => new TasksAssignment { TechnicianId = id })
-                .ToList();
-        }
+        // if (dto.TechnicianIds != null)
+        // {
+        //     task.AssignedUsers = dto.TechnicianIds
+        //         .Select(id => new TasksAssignment { TechnicianId = id })
+        //         .ToList();
+        // }
 
-        _context.MaintenanceTasks.Add(task);
+        _context.MaintenanceTasks.Add(maintenanceTask);
         await _context.SaveChangesAsync();
 
-        return Ok(task);
+        return Ok(maintenanceTask);
     }
+
 }
