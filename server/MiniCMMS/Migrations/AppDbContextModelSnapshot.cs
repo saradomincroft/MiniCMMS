@@ -105,14 +105,9 @@ namespace MiniCMMS.Migrations
                     b.Property<int>("MaintenanceTaskId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TechnicianId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("TechnicianId", "MaintenanceTaskId");
 
                     b.HasIndex("MaintenanceTaskId");
-
-                    b.HasIndex("TechnicianId1");
 
                     b.ToTable("TasksAssignments");
                 });
@@ -201,14 +196,10 @@ namespace MiniCMMS.Migrations
                         .IsRequired();
 
                     b.HasOne("MiniCMMS.Models.Technician", "Technician")
-                        .WithMany()
+                        .WithMany("AssignedTasks")
                         .HasForeignKey("TechnicianId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("MiniCMMS.Models.Technician", null)
-                        .WithMany("AssignedTasks")
-                        .HasForeignKey("TechnicianId1");
 
                     b.Navigation("MaintenanceTask");
 

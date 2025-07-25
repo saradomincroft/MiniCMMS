@@ -12,8 +12,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace MiniCMMS.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250717061600_AddCreatedAtProperlyThisTimeToMaintenanceTask")]
-    partial class AddCreatedAtProperlyThisTimeToMaintenanceTask
+    [Migration("20250725004330_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -68,7 +68,7 @@ namespace MiniCMMS.Migrations
                     b.Property<int>("AssetId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("CompletedDate")
+                    b.Property<DateTime?>("CompletedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime>("CreatedAt")
@@ -88,7 +88,7 @@ namespace MiniCMMS.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("ScheduledDate")
+                    b.Property<DateTime?>("ScheduledDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
@@ -108,14 +108,9 @@ namespace MiniCMMS.Migrations
                     b.Property<int>("MaintenanceTaskId")
                         .HasColumnType("integer");
 
-                    b.Property<int?>("TechnicianId1")
-                        .HasColumnType("integer");
-
                     b.HasKey("TechnicianId", "MaintenanceTaskId");
 
                     b.HasIndex("MaintenanceTaskId");
-
-                    b.HasIndex("TechnicianId1");
 
                     b.ToTable("TasksAssignments");
                 });
@@ -204,14 +199,10 @@ namespace MiniCMMS.Migrations
                         .IsRequired();
 
                     b.HasOne("MiniCMMS.Models.Technician", "Technician")
-                        .WithMany()
+                        .WithMany("AssignedTasks")
                         .HasForeignKey("TechnicianId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.HasOne("MiniCMMS.Models.Technician", null)
-                        .WithMany("AssignedTasks")
-                        .HasForeignKey("TechnicianId1");
 
                     b.Navigation("MaintenanceTask");
 

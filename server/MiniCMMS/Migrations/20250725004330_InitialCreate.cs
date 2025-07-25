@@ -19,9 +19,10 @@ namespace MiniCMMS.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Name = table.Column<string>(type: "text", nullable: false),
-                    Location = table.Column<string>(type: "text", nullable: false),
+                    MainLocation = table.Column<string>(type: "text", nullable: false),
+                    SubLocation = table.Column<string>(type: "text", nullable: false),
                     Category = table.Column<string>(type: "text", nullable: false),
-                    LastMaintained = table.Column<DateTime>(type: "timestamp with time zone", nullable: false)
+                    LastMaintained = table.Column<DateOnly>(type: "date", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -39,7 +40,7 @@ namespace MiniCMMS.Migrations
                     Username = table.Column<string>(type: "text", nullable: false),
                     Email = table.Column<string>(type: "text", nullable: false),
                     PasswordHash = table.Column<string>(type: "text", nullable: false),
-                    Role = table.Column<string>(type: "text", nullable: false)
+                    UserType = table.Column<string>(type: "character varying(13)", maxLength: 13, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -53,10 +54,13 @@ namespace MiniCMMS.Migrations
                     Id = table.Column<int>(type: "integer", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     Description = table.Column<string>(type: "text", nullable: false),
-                    ScheduledDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    ScheduledDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
                     Priority = table.Column<string>(type: "text", nullable: false),
                     IsCompleted = table.Column<bool>(type: "boolean", nullable: false),
-                    AssetId = table.Column<int>(type: "integer", nullable: false)
+                    CompletedDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    AssetId = table.Column<int>(type: "integer", nullable: false),
+                    CreatedById = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -67,39 +71,24 @@ namespace MiniCMMS.Migrations
                         principalTable: "Assets",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TaskHistories",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "integer", nullable: false)
-                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
-                    MaintenanceTaskId = table.Column<int>(type: "integer", nullable: false),
-                    CompletedOn = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    Notes = table.Column<string>(type: "text", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TaskHistories", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskHistories_MaintenanceTasks_MaintenanceTaskId",
-                        column: x => x.MaintenanceTaskId,
-                        principalTable: "MaintenanceTasks",
+                        name: "FK_MaintenanceTasks_Users_CreatedById",
+                        column: x => x.CreatedById,
+                        principalTable: "Users",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
                 name: "TasksAssignments",
                 columns: table => new
                 {
-                    UserId = table.Column<int>(type: "integer", nullable: false),
+                    TechnicianId = table.Column<int>(type: "integer", nullable: false),
                     MaintenanceTaskId = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TasksAssignments", x => new { x.UserId, x.MaintenanceTaskId });
+                    table.PrimaryKey("PK_TasksAssignments", x => new { x.TechnicianId, x.MaintenanceTaskId });
                     table.ForeignKey(
                         name: "FK_TasksAssignments_MaintenanceTasks_MaintenanceTaskId",
                         column: x => x.MaintenanceTaskId,
@@ -107,8 +96,8 @@ namespace MiniCMMS.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TasksAssignments_Users_UserId",
-                        column: x => x.UserId,
+                        name: "FK_TasksAssignments_Users_TechnicianId",
+                        column: x => x.TechnicianId,
                         principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
@@ -120,9 +109,9 @@ namespace MiniCMMS.Migrations
                 column: "AssetId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskHistories_MaintenanceTaskId",
-                table: "TaskHistories",
-                column: "MaintenanceTaskId");
+                name: "IX_MaintenanceTasks_CreatedById",
+                table: "MaintenanceTasks",
+                column: "CreatedById");
 
             migrationBuilder.CreateIndex(
                 name: "IX_TasksAssignments_MaintenanceTaskId",
@@ -134,19 +123,16 @@ namespace MiniCMMS.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TaskHistories");
-
-            migrationBuilder.DropTable(
                 name: "TasksAssignments");
 
             migrationBuilder.DropTable(
                 name: "MaintenanceTasks");
 
             migrationBuilder.DropTable(
-                name: "Users");
+                name: "Assets");
 
             migrationBuilder.DropTable(
-                name: "Assets");
+                name: "Users");
         }
     }
 }

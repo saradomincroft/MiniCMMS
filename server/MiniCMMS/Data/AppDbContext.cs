@@ -38,7 +38,7 @@ public class AppDbContext : DbContext
         // Set up foreign key from TasksAssignment to User
         modelBuilder.Entity<TasksAssignment>()
             .HasOne(ta => ta.Technician)
-            .WithMany()
+            .WithMany(t => t.AssignedTasks)
             .HasForeignKey(ta => ta.TechnicianId);
 
         // Set up foreign key from TasksAssignment to MaintenanceTask

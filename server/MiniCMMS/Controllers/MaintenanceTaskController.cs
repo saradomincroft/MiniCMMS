@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace MiniCMMS.Controllers;
 
@@ -15,7 +16,6 @@ namespace MiniCMMS.Controllers;
 public class MaintenanceTasksController : ControllerBase
 {
     private readonly AppDbContext _context;
-    // private int currentUserId;
 
     public MaintenanceTasksController(AppDbContext context)
     {
@@ -57,14 +57,12 @@ public class MaintenanceTasksController : ControllerBase
 
     [Authorize(Roles = "Manager")]
     [HttpPost]
-    public async Task<IActionResult> CreateTask([FromBody] CreateMaintenanceTaskDto dto)
+    public async Task<IActionResult> CreateMaintenanceTask([FromBody] CreateMaintenanceTaskDto dto)
     {
-        var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub" || c.Type == "userId");
-        if (userIdClaim == null)
-            return Unauthorized("User not authenticated.");
+        var userIdToString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-        if (!int.TryParse(userIdClaim.Value, out int currentUserId))
-            return Unauthorized("Invalid user ID.");
+        if (!int.TryParse(userIdToString, out int currentUserId))
+            return Unauthorized("Invalid user ID claim");
 
         var maintenanceTask = new MaintenanceTask
         {
@@ -77,12 +75,12 @@ public class MaintenanceTasksController : ControllerBase
             IsCompleted = false
         };
 
-        // if (dto.TechnicianIds != null)
-        // {
-        //     task.AssignedUsers = dto.TechnicianIds
-        //         .Select(id => new TasksAssignment { TechnicianId = id })
-        //         .ToList();
-        // }
+        if (dto.TechnicianIds != null)
+        {
+            maintenanceTask.AssignedUsers = dto.TechnicianIds
+                .Select(id => new TasksAssignment { TechnicianId = id })
+                .ToList();
+        }
 
         _context.MaintenanceTasks.Add(maintenanceTask);
         await _context.SaveChangesAsync();
