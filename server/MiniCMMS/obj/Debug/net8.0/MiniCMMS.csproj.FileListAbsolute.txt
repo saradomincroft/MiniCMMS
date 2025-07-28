@@ -151,3 +151,5 @@
 /Users/saracroft/Code/MiniCMMS/server/MiniCMMS/obj/Debug/net8.0/MiniCMMS.pdb
 /Users/saracroft/Code/MiniCMMS/server/MiniCMMS/obj/Debug/net8.0/MiniCMMS.genruntimeconfig.cache
 /Users/saracroft/Code/MiniCMMS/server/MiniCMMS/obj/Debug/net8.0/ref/MiniCMMS.dll
+/Users/saracroft/Code/MiniCMMS/server/MiniCMMS/bin/Debug/net8.0/Castle.Core.dll
+/Users/saracroft/Code/MiniCMMS/server/MiniCMMS/bin/Debug/net8.0/Microsoft.EntityFrameworkCore.Proxies.dll

@@ -37,7 +37,7 @@ public class UserController : ControllerBase
         return Ok(new
         {
             UserId = user.Id,
-            Username = user.Username,
+            user.Username,
             UserType = user.GetType().Name
         });
     }

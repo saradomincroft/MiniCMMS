@@ -72,20 +72,54 @@ public class MaintenanceTasksController : ControllerBase
             AssetId = dto.AssetId,
             CreatedById = currentUserId,
             CreatedAt = DateTime.UtcNow,
-            IsCompleted = false
+            IsCompleted = false,
+            AssignedUsers = dto.TechnicianIds?.Select(id => new TasksAssignment { TechnicianId = id }).ToList() ?? new()
         };
-
-        if (dto.TechnicianIds != null)
-        {
-            maintenanceTask.AssignedUsers = dto.TechnicianIds
-                .Select(id => new TasksAssignment { TechnicianId = id })
-                .ToList();
-        }
 
         _context.MaintenanceTasks.Add(maintenanceTask);
         await _context.SaveChangesAsync();
 
-        return Ok(maintenanceTask);
+        var taskWithTechnicians = await _context.MaintenanceTasks
+        .AsNoTracking()
+        .Include(t => t.Asset)
+        .Include(t => t.CreatedBy)
+        .Include(t => t.AssignedUsers)
+            .ThenInclude(ta => ta.Technician)
+        .FirstOrDefaultAsync(t => t.Id == maintenanceTask.Id);
+
+    if (taskWithTechnicians == null)
+    return NotFound("Created task not found");
+
+        var resultDto = new MaintenanceTaskDto
+        {
+            Id = taskWithTechnicians.Id,
+            Description = taskWithTechnicians.Description,
+            CreatedAt = taskWithTechnicians.CreatedAt,
+            ScheduledDate = taskWithTechnicians.ScheduledDate,
+            Priority = taskWithTechnicians.Priority,
+            IsCompleted = taskWithTechnicians.IsCompleted,
+            CompletedDate = taskWithTechnicians.CompletedDate,
+            AssetId = taskWithTechnicians.AssetId,
+            AssetName = taskWithTechnicians.Asset?.Name ?? "",
+            AssetMainLocation = taskWithTechnicians.Asset?.MainLocation ?? "",
+            AssetSubLocation = taskWithTechnicians.Asset?.SubLocation ?? "",
+            CreatedById = taskWithTechnicians.CreatedById,
+            CreatedByFirstName = taskWithTechnicians.CreatedBy?.FirstName ?? "",
+            CreatedByLastName = taskWithTechnicians.CreatedBy?.LastName ?? "",
+
+            Technicians = taskWithTechnicians.AssignedUsers != null && taskWithTechnicians.AssignedUsers.Any()
+                ? taskWithTechnicians.AssignedUsers
+                    .Where(ta => ta.Technician != null)
+                    .Select(ta => new TechnicianDto
+                    {
+                        Id = ta.TechnicianId,
+                        FirstName = ta.Technician!.FirstName,
+                        LastName = ta.Technician!.LastName
+                    }).ToList()
+                : new List<TechnicianDto>()
+        };
+
+        return Ok(resultDto);
     }
 
 }
