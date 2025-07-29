@@ -87,8 +87,8 @@ public class MaintenanceTasksController : ControllerBase
             .ThenInclude(ta => ta.Technician)
         .FirstOrDefaultAsync(t => t.Id == maintenanceTask.Id);
 
-    if (taskWithTechnicians == null)
-    return NotFound("Created task not found");
+        if (taskWithTechnicians == null)
+            return NotFound("Created task not found");
 
         var resultDto = new MaintenanceTaskDto
         {
@@ -120,6 +120,30 @@ public class MaintenanceTasksController : ControllerBase
         };
 
         return Ok(resultDto);
+    }
+
+    [Authorize(Roles = "Manager")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> DeleteMaintenanceTask(int id)
+    {
+        var maintenanceTask = await _context.MaintenanceTasks
+            .Include(t => t.AssignedUsers)
+            .Include(t => t.Asset)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (maintenanceTask == null)
+        {
+            return NotFound("Maintenance ask not found");
+        }
+
+        _context.TasksAssignments.RemoveRange(maintenanceTask.AssignedUsers);
+        _context.MaintenanceTasks.Remove(maintenanceTask);
+
+        await _context.SaveChangesAsync();
+
+        var message = $"{maintenanceTask.Description} (from {maintenanceTask.Asset?.Name}, {maintenanceTask.Asset?.MainLocation}, {maintenanceTask.Asset?.SubLocation}) has been deleted.";
+
+        return Ok(new { message });
     }
 
 }
