@@ -151,4 +151,123 @@ public class MaintenanceTasksController : ControllerBase
         return Ok(new { message });
     }
 
+    [HttpPatch("{id}")]
+    [Authorize]
+    public async Task<IActionResult> UpdateMaintenanceTask(int id, UpdateMaintenanceTaskDto dto)
+    {
+        // Get user ID from claims
+        // todo: create helper reusable
+        var userIdToString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdToString, out int currentUserId))
+            return Unauthorized("Invalid user Id claim");
+
+        // Find task to update
+        var maintenanceTask = await _context.MaintenanceTasks
+            .Include(t => t.AssignedUsers)
+            .FirstOrDefaultAsync(t => t.Id == id);
+
+        if (maintenanceTask == null)
+            return NotFound("Maintenance task not found");
+
+        // get current user
+        var user = await _context.Users.FindAsync(currentUserId);
+        if (user == null)
+            return Unauthorized("User not found");
+
+        if (user is Manager)
+        {
+            if (dto.Description != null)
+                maintenanceTask.Description = dto.Description;
+            if (dto.ScheduledDate.HasValue)
+                maintenanceTask.ScheduledDate = dto.ScheduledDate.Value;
+            if (dto.Priority != null)
+                maintenanceTask.Priority = dto.Priority;
+            if (dto.IsCompleted.HasValue && dto.IsCompleted.Value != maintenanceTask.IsCompleted)
+            {
+                maintenanceTask.IsCompleted = dto.IsCompleted.Value;
+                maintenanceTask.CompletedDate = dto.IsCompleted.Value ? DateOnly.FromDateTime(DateTime.UtcNow) : null;
+            }
+            if (dto.TechnicianIdsToAdd != null)
+            {
+                var currentTechnicianIds = maintenanceTask.AssignedUsers
+                    .Select(ta => ta.TechnicianId)
+                    .ToList();
+
+                var techniciansToAdd = dto.TechnicianIdsToAdd.Except(currentTechnicianIds);
+
+                foreach (var technicianId in techniciansToAdd)
+                {
+                    maintenanceTask.AssignedUsers.Add(new TasksAssignment
+                    {
+                        TechnicianId = technicianId,
+                        MaintenanceTaskId = maintenanceTask.Id
+                    });
+                }
+            }
+
+            if (dto.TechnicianIdsToRemove != null)
+            {
+                foreach (var technicianId in dto.TechnicianIdsToRemove)
+                {
+
+                    var taskAssignment = maintenanceTask.AssignedUsers
+                        .FirstOrDefault(ta => ta.TechnicianId == technicianId);
+                    if (taskAssignment != null)
+                    {
+                        maintenanceTask.AssignedUsers.Remove(taskAssignment);
+                    }
+                }
+            }
+        }
+
+        else if (user is Technician technician)
+            {
+                // Technicians can only update completion status on tasks assigned to them
+                if (dto.IsCompleted.HasValue && dto.IsCompleted.Value != maintenanceTask.IsCompleted)
+                {
+                    bool isAssigned = maintenanceTask.AssignedUsers.Any(ta => ta.TechnicianId == technician.Id);
+                    if (!isAssigned)
+                        return Forbid("You are not assigned to this task.");
+
+                    maintenanceTask.IsCompleted = dto.IsCompleted.Value;
+                    maintenanceTask.CompletedDate = dto.IsCompleted.Value ? DateOnly.FromDateTime(DateTime.UtcNow) : null;
+                }
+                else
+                {
+                    return Forbid("Technicians can only update completion status.");
+                }
+            }
+            else
+            {
+                return Forbid("User not authorized.");
+            }
+
+            await _context.SaveChangesAsync();
+
+            var updatedTask = await _context.MaintenanceTasks
+                .Include(t => t.AssignedUsers)
+                    .ThenInclude(ta => ta.Technician)
+                .FirstOrDefaultAsync(t => t.Id == id);
+
+            if (updatedTask == null)
+                return NotFound("Updated maintenance task not found.");
+
+            var response = new MaintenanceTaskDto
+            {
+                Id = updatedTask.Id,
+                Description = updatedTask.Description,
+                ScheduledDate = updatedTask.ScheduledDate,
+                Priority = updatedTask.Priority,
+                IsCompleted = updatedTask.IsCompleted,
+                CompletedDate = updatedTask.CompletedDate,
+                Technicians = updatedTask.AssignedUsers.Select(ta => new TechnicianDto
+                {
+                    Id = ta.TechnicianId,
+                    FirstName = ta.Technician?.FirstName ?? "",
+                    LastName = ta.Technician?.LastName ?? ""
+                }).ToList()
+            };
+            return Ok(response);
+        }
+
 }
