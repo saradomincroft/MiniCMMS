@@ -59,8 +59,13 @@ public class MaintenanceTasksController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> CreateMaintenanceTask([FromBody] CreateMaintenanceTaskDto dto)
     {
+        // Authorisation logic
+        // Retrieves and validates current authenticated user ID from their JWT
+        // Parses and validates user identity
         var userIdToString = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
+        // Tries to convert string to int
+        // If fails (eg claim is missing or NaN) - returns false
+        // if parse successful, variable (currentUserId) holds user ID as an int
         if (!int.TryParse(userIdToString, out int currentUserId))
             return Unauthorized("Invalid user ID claim");
 

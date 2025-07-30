@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MiniCMMS")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+8aadfc28b0767dc15c53a3110bc32f313778c5ee")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b95dc4d72b9d0dd5c9e744941be9f23be7fa3045")]
 [assembly: System.Reflection.AssemblyProductAttribute("MiniCMMS")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MiniCMMS")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
