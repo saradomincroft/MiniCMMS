@@ -9,32 +9,49 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Loads environment variables locally from .env
+// Load environment variables from .env file (local dev)
 DotNetEnv.Env.Load();
 
-// Reads database username and password from environment variables (from.env)
+// Get DB credentials from environment variables
 var dbUsername = Environment.GetEnvironmentVariable("DB_USERNAME");
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
 
-// Get base connection string (host, port database) from config
+// Get base connection string from appsettings.json or config
 var baseConnection = builder.Configuration.GetConnectionString("DefaultConnection");
 
-// Combines connection string with credentials
+// Compose full connection string with credentials
 var fullConnection = $"{baseConnection};Username={dbUsername};Password={dbPassword}";
 
-// Registers DbContext with PostgreSQL provider
+// Register DbContext with PostgreSQL provider
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(fullConnection));
 
-// Adds services to the container
+// Add controllers
 builder.Services.AddControllers();
 
-// JWT Auth Setup (start)
+// Setup CORS policy to allow Angular app running on localhost:4200
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod()
+                  .AllowCredentials();
+        });
+});
+
+// JWT Authentication setup
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
 var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
+
 if (string.IsNullOrEmpty(secretKey))
 {
     throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set.");
 }
+
 var key = Encoding.UTF8.GetBytes(secretKey);
 
 builder.Services.AddAuthentication(options =>
@@ -55,16 +72,14 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(key)
     };
 });
-// JWT Auth Setup (end)
 
 builder.Services.AddAuthorization();
 
-// Swagger for API docs in development
+// Swagger config
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
-
 
 // Middleware pipeline
 if (app.Environment.IsDevelopment())
@@ -73,8 +88,16 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseRouting();
+
+app.UseCors(MyAllowSpecificOrigins);
+
+// Comment out during local dev if HTTPS redirect causes issues with preflight requests
+// app.UseHttpsRedirection();
+
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.MapControllers();
+
 app.Run();
