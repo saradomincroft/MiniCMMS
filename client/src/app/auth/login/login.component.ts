@@ -1,15 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-auth',
   standalone: true,
-  imports: [CommonModule, FormsModule, HttpClientModule],
-  templateUrl: './auth.component.html',
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './login.component.html',
 })
-export class AuthComponent {
+export class LoginComponent {
   identifier = '';
   password = '';
   message = '';
