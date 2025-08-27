@@ -1,5 +1,6 @@
 import { Asset } from "./Asset";
 import { Manager } from "./Manager";
+import { Technician } from "./Technician";
 export interface MaintenanceTask {
   id: number;
   description: string;
@@ -12,4 +13,5 @@ export interface MaintenanceTask {
   asset?: Asset;
   createdById: number;
   createdBy: Manager;
+  technicians: { firstName: string; lastName: string }[];
 }

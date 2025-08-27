@@ -56,6 +56,45 @@ public class MaintenanceTasksController : ControllerBase
     }
 
     [Authorize(Roles = "Manager")]
+    [HttpGet("all")]
+    public async Task<IActionResult> GetAllTasks()
+    {
+        var tasks = await _context.MaintenanceTasks
+            .Include(t => t.Asset)
+            .Include(t => t.CreatedBy)
+            .Include(t => t.AssignedUsers)
+                .ThenInclude(ta => ta.Technician)
+            .ToListAsync();
+
+        var result = tasks.Select(t => new MaintenanceTaskDto
+        {
+            Id = t.Id,
+            Description = t.Description,
+            CreatedAt = t.CreatedAt,
+            ScheduledDate = t.ScheduledDate,
+            Priority = t.Priority,
+            IsCompleted = t.IsCompleted,
+            CompletedDate = t.CompletedDate,
+            AssetId = t.AssetId,
+            AssetName = t.Asset?.Name ?? "",
+            AssetMainLocation = t.Asset?.MainLocation ?? "",
+            AssetSubLocation = t.Asset?.SubLocation ?? "",
+            CreatedById = t.CreatedById,
+            CreatedByFirstName = t.CreatedBy?.FirstName ?? "",
+            CreatedByLastName = t.CreatedBy?.LastName ?? "",
+            Technicians = t.AssignedUsers.Select(ta => new TechnicianDto
+            {
+                Id = ta.TechnicianId,
+                FirstName = ta.Technician?.FirstName ?? "",
+                LastName = ta.Technician?.LastName ?? ""
+            }).ToList()
+        }).ToList();
+
+        return Ok(result);
+    }
+
+
+    [Authorize(Roles = "Manager")]
     [HttpPost]
     public async Task<IActionResult> CreateMaintenanceTask([FromBody] CreateMaintenanceTaskDto dto)
     {
