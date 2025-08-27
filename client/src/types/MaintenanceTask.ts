@@ -1,6 +1,13 @@
 import { Asset } from "./Asset";
 import { Manager } from "./Manager";
 import { Technician } from "./Technician";
+
+export interface TechnicianInTask {
+  id: number;
+  firstName: string;
+  lastName: string;
+}
+
 export interface MaintenanceTask {
   id: number;
   description: string;
@@ -10,8 +17,12 @@ export interface MaintenanceTask {
   isCompleted: boolean;
   completedDate?: string;
   assetId: number;
-  asset?: Asset;
+  assetName: string;
+  assetMainLocation: string;
+  assetSubLocation: string;
+
   createdById: number;
-  createdBy: Manager;
-  technicians: { firstName: string; lastName: string }[];
+  createdByFirstName: string;
+  createdByLastName: string;
+  technicians: TechnicianInTask[];
 }
