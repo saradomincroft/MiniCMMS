@@ -24,14 +24,14 @@ export default function TaskForm({ assets, technicians, setTasks, auth }: TaskFo
 
     setError("");
 
-    const dto = {
-      description,
-      scheduledDate: new Date(scheduledDate).toISOString(),
-      priority,
-      assetId,
-      technicianIds: assignedTechIds,
-      isCompleted: false,
-    };
+const dto = {
+  description,
+  scheduledDate: scheduledDate || undefined,
+  priority,
+  assetId: assetId!,
+  technicianIds: assignedTechIds,
+};
+
 
     try {
       const res = await fetch("https://localhost:7119/api/MaintenanceTasks", {
@@ -44,7 +44,7 @@ export default function TaskForm({ assets, technicians, setTasks, auth }: TaskFo
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         throw new Error(data?.message || "Failed to create task");
       }
 
@@ -100,7 +100,7 @@ export default function TaskForm({ assets, technicians, setTasks, auth }: TaskFo
         <option value="">Select Asset</option>
         {assets.map(a => (
           <option key={a.id} value={a.id}>
-            {a.name}
+            {a.name} ({a.mainLocation}/{a.subLocation})
           </option>
         ))}
       </select>
