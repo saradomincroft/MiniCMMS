@@ -1,23 +1,28 @@
 import { User } from "../types/User";
 
-const API_URL = "https://localhost:7119/api";
-
-export const login = async (identifier: string, password: string) => {
-  const res = await fetch(`${API_URL}/auth/login`, {
+export async function login(identifier: string, password: string): Promise<{ token: string; user: User }> {
+  const res = await fetch("https://localhost:7119/api/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ identifier, password }),
   });
-  if (!res.ok) throw new Error("Login failed");
-  return res.json() as Promise<{ token: string; user: User }>;
-};
 
-export const signup = async (userData: Partial<User>) => {
-  const res = await fetch(`${API_URL}/auth/signup`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(userData),
-  });
-  if (!res.ok) throw new Error("Signup failed");
-  return res.json() as Promise<User>;
-};
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("Login failed:", text);
+    throw new Error("Login failed");
+  }
+
+  const data = await res.json();
+
+  const user: User = {
+    id: Number(data.id ?? 0),
+    firstName: data.firstName ?? "",
+    lastName: data.lastName ?? "",
+    username: data.username ?? "",
+    email: data.email ?? "",
+    role: data.role === "Manager" ? "Manager" : "Technician",
+  };
+
+  return { token: data.token, user };
+}
