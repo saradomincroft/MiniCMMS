@@ -10,15 +10,8 @@ export default function App() {
 
   return (
     <Routes>
-      {/* If user is logged in, go to Dashboard, otherwise show Login */}
-      <Route
-        path="/"
-        element={auth?.user ? <Navigate to="/dashboard" /> : <Login />}
-      />
-      <Route
-        path="/dashboard"
-        element={auth?.user ? <Dashboard /> : <Navigate to="/" />}
-      />
+      <Route path="/" element={<Login />} />
+      <Route path="/dashboard" element={<Dashboard />} />
     </Routes>
   );
 }
