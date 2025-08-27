@@ -1,56 +1,49 @@
 using DotNetEnv;
 using MiniCMMS.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Load environment variables from .env file (local dev)
+// Load environment variables from .env file
 DotNetEnv.Env.Load();
 
-// Get DB credentials from environment variables
+// Build app
+var builder = WebApplication.CreateBuilder(args);
+
+// ---------- Database ----------
+
 var dbUsername = Environment.GetEnvironmentVariable("DB_USERNAME");
 var dbPassword = Environment.GetEnvironmentVariable("DB_PASSWORD");
 
-// Get base connection string from appsettings.json or config
 var baseConnection = builder.Configuration.GetConnectionString("DefaultConnection");
-
-// Compose full connection string with credentials
 var fullConnection = $"{baseConnection};Username={dbUsername};Password={dbPassword}";
 
-// Register DbContext with PostgreSQL provider
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(fullConnection));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(fullConnection)
+);
 
-// Add controllers
+// ---------- Controllers ----------
 builder.Services.AddControllers();
 
-// Setup CORS policy to allow Angular app running on localhost:4200
+// ---------- CORS ----------
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod()
-                  .AllowCredentials();
-        });
+    options.AddPolicy(MyAllowSpecificOrigins, policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") // React Vite dev server
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
 });
 
-// JWT Authentication setup
+// ---------- JWT Authentication ----------
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY");
-
-if (string.IsNullOrEmpty(secretKey))
-{
-    throw new InvalidOperationException("JWT_SECRET_KEY environment variable is not set.");
-}
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET_KEY") 
+                ?? throw new InvalidOperationException("JWT_SECRET_KEY not set");
 
 var key = Encoding.UTF8.GetBytes(secretKey);
 
@@ -75,13 +68,14 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// Swagger config
+// ---------- Swagger ----------
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+// ---------- Build App ----------
 var app = builder.Build();
 
-// Middleware pipeline
+// ---------- Middleware Pipeline ----------
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -90,14 +84,14 @@ if (app.Environment.IsDevelopment())
 
 app.UseRouting();
 
+// CORS before Authentication/Authorization (remember!!!)
 app.UseCors(MyAllowSpecificOrigins);
-
-// Comment out during local dev if HTTPS redirect causes issues with preflight requests
-// app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Map controllers
 app.MapControllers();
 
+// Run app
 app.Run();
