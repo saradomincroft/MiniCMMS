@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 namespace MiniCMMS.Models;
 
-public class User
+public abstract class User
 {
     public int Id { get; set; }
     public string FirstName { get; set; } = "";
